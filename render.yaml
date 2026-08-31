@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: honeychain-demo-api
+    runtime: python
+    plan: free
+    rootDir: .
+    buildCommand: pip install -r requirements.txt
+    startCommand: python backend/migrate.py && gunicorn backend.blockchain_api_server:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: HONEYCHAIN_SECRET_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false

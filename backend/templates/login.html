@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HoneyChain Demo Login</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; background: #f7f9f5; color: #122; }
+      .wrap { max-width: 420px; margin: 80px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+      h1 { margin-top: 0; color: #264d2d; }
+      label { display: block; margin-top: 14px; font-weight: 600; }
+      input, button { width: 100%; box-sizing: border-box; margin-top: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid #c9d4c8; }
+      button { background: #254d2d; color: white; border: none; cursor: pointer; }
+      .status { margin-top: 12px; min-height: 24px; color: #7d1d1d; }
+      .info { margin-top: 18px; font-size: 0.9rem; color: #465; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>HoneyChain</h1>
+      <p>Supply-chain traceability demo</p>
+      <form id="loginForm">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" required>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required>
+        <button type="submit">Log in</button>
+      </form>
+      <div id="status" class="status"></div>
+      <div class="info">
+        Demo credentials should be set via environment variables such as HONEYCHAIN_BEEKEEPER_PASSWORD.
+      </div>
+    </div>
+    <script>
+      const form = document.getElementById('loginForm');
+      const status = document.getElementById('status');
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        status.textContent = 'Signing in...';
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+          window.location.href = '/dashboard';
+          return;
+        }
+        status.textContent = data.error || 'Login failed';
+      });
+    </script>
+  </body>
+</html>

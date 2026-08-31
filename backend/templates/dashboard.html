@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HoneyChain Dashboard</title>
+    <style>
+      body { font-family: Arial, sans-serif; background: #f3f7ee; color: #1a2121; margin: 0; }
+      .wrap { max-width: 1100px; margin: 32px auto; padding: 0 20px 40px; }
+      header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+      .card { background: white; border-radius: 12px; box-shadow: 0 8px 18px rgba(0,0,0,0.06); padding: 20px; margin-bottom: 18px; }
+      .grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 18px; }
+      label { display: block; font-weight: 600; margin-top: 12px; }
+      input, button, select { width: 100%; box-sizing: border-box; margin-top: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid #cdd8cb; }
+      button { background: #1c4d2d; color: white; border: none; cursor: pointer; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border-bottom: 1px solid #e6ecdf; text-align: left; padding: 10px; }
+      .status { margin-top: 12px; min-height: 24px; color: #274e2d; }
+      a.link { color: #235b38; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div>
+          <h1>HoneyChain Demo</h1>
+          <div>Logged in as {{ username }}</div>
+        </div>
+        <a class="link" href="/logout">Logout</a>
+      </header>
+
+      <div class="grid">
+        <div class="card">
+          <h2>Create Batch</h2>
+          <form id="batchForm">
+            <label>Batch ID
+              <input id="batch_id" name="batch_id" type="text" placeholder="BATCH-1001" required>
+            </label>
+            <label>Origin
+              <input id="origin" name="origin" type="text" placeholder="north" required>
+            </label>
+            <label>QR ID
+              <input id="qr_id" name="qr_id" type="text" placeholder="QR-1001" required>
+            </label>
+            <button type="submit">Create batch</button>
+          </form>
+          <div id="status" class="status"></div>
+        </div>
+
+        <div class="card">
+          <h2>Verification</h2>
+          <form id="verifyForm">
+            <label>QR ID
+              <input id="verify_qr_id" type="text" placeholder="QR-1001" required>
+            </label>
+            <button type="submit">Verify</button>
+          </form>
+          <div id="verifyStatus" class="status"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Recent Batches</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Batch ID</th>
+              <th>QR ID</th>
+              <th>Origin</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for batch in batches %}
+              <tr>
+                <td>{{ batch.get('batch_id', '') }}</td>
+                <td>{{ batch.get('qr_id', '') }}</td>
+                <td>{{ batch.get('origin', '') }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const batchForm = document.getElementById('batchForm');
+      const verifyForm = document.getElementById('verifyForm');
+      const status = document.getElementById('status');
+      const verifyStatus = document.getElementById('verifyStatus');
+
+      batchForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        status.textContent = 'Creating batch...';
+        const payload = {
+          batch_id: document.getElementById('batch_id').value.trim(),
+          origin: document.getElementById('origin').value.trim(),
+          qr_id: document.getElementById('qr_id').value.trim(),
+        };
+        const response = await fetch('/api/batches', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        status.textContent = response.ok ? `Batch created: ${data.batch_id}` : (data.error || 'Creation failed');
+        if (response.ok) { window.location.reload(); }
+      });
+
+      verifyForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        verifyStatus.textContent = 'Verifying...';
+        const response = await fetch('/api/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ qr_id: document.getElementById('verify_qr_id').value.trim() })
+        });
+        const data = await response.json();
+        verifyStatus.textContent = response.ok ? `Verification OK: ${data.batch_id}` : (data.error || 'Verification failed');
+      });
+    </script>
+  </body>
+</html>
