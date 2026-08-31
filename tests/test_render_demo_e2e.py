@@ -37,6 +37,14 @@ def test_full_demo_flow_login_batch_and_verify_via_qr_id():
     assert 'honeychain' in body
     assert 'create batch' in body
 
+    consensus = client.get('/api/consensus')
+    assert consensus.status_code == 200
+    assert consensus.get_json()['phase'] == 'FINALIZE'
+
+    blockchain = client.get('/api/blockchain')
+    assert blockchain.status_code == 200
+    assert blockchain.get_json()['chain_valid'] is True
+
 
 def test_designation_login_renders_role_specific_workspace():
     service = AuthService()

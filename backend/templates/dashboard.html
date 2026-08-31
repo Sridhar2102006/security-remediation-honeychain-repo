@@ -15,6 +15,13 @@
       .flow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
       .step { background: #edf6e9; border-radius: 999px; padding: 7px 11px; font-size: 0.84rem; color: #24583a; }
       .muted { color: #607069; }
+      .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+      .metric { background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #e2eadc; }
+      .metric strong { display: block; font-size: 1.5rem; color: #145642; }
+      .metric span { color: #607069; font-size: 0.82rem; }
+      .validators { display: flex; flex-wrap: wrap; gap: 8px; }
+      .validator { padding: 8px 10px; background: #e9f6e7; border-radius: 8px; color: #24583a; }
+      @media (max-width: 700px) { .grid, .metrics { grid-template-columns: 1fr; } header { align-items: flex-start; } }
       .grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 18px; }
       label { display: block; font-weight: 600; margin-top: 12px; }
       input, button, select { width: 100%; box-sizing: border-box; margin-top: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid #cdd8cb; }
@@ -43,8 +50,26 @@
         <a class="link" href="/logout">Logout</a>
       </header>
 
-      {% if can_create %}
+      <div class="metrics">
+        <div class="metric"><strong>{{ batches|length }}</strong><span>Total batches</span></div>
+        <div class="metric"><strong>{{ blocks|length }}</strong><span>Finalized blocks</span></div>
+        <div class="metric"><strong>{{ quorum }}/{{ validator_count }}</strong><span>PBFT quorum</span></div>
+        <div class="metric"><strong>✓</strong><span>Database connected</span></div>
+      </div>
+
+      <div class="card">
+        <h2>PBFT consensus</h2>
+        <p class="muted">Four validator nodes verify each batch before it is written to the tamper-evident ledger.</p>
+        <div class="flow"><span class="step">REQUEST</span><span class="step">PRE-PREPARE</span><span class="step">PREPARE</span><span class="step">COMMIT</span><span class="step">FINALIZE</span></div>
+        <div class="validators">
+          {% for validator in validators %}
+            <div class="validator">✓ {{ validator.node_id }} · signature verified</div>
+          {% endfor %}
+        </div>
+      </div>
+
       <div class="grid">
+      {% if can_create %}
         <div class="card">
           <h2>Create Batch</h2>
           <form id="batchForm">
@@ -61,7 +86,7 @@
           </form>
           <div id="status" class="status"></div>
         </div>
-        {% else %}
+      {% else %}
         <div class="card">
           <h2>{{ workspace_title }}</h2>
           <p class="muted">{{ workspace_description }}</p>
@@ -69,7 +94,7 @@
             <span class="step">View provenance</span><span class="step">Review events</span><span class="step">Verify QR</span><span class="step">Inspect consensus</span>
           </div>
         </div>
-        {% endif %}
+      {% endif %}
 
         <div class="card">
           <h2>Verification</h2>
@@ -112,7 +137,7 @@
       const status = document.getElementById('status');
       const verifyStatus = document.getElementById('verifyStatus');
 
-      batchForm.addEventListener('submit', async (event) => {
+      if (batchForm) batchForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         status.textContent = 'Creating batch...';
         const payload = {

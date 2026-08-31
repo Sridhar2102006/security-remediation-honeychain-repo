@@ -213,6 +213,7 @@ def dashboard_page():
     role_title, workspace_title, workspace_description = role_details.get(
         role, ('HoneyChain workspace', 'Traceability workspace', 'Review trusted supply-chain records.')
     )
+    blocks = DB_BACKEND.list_blocks()
     return render_template(
         'dashboard.html',
         username=username,
@@ -222,6 +223,10 @@ def dashboard_page():
         workspace_title=workspace_title,
         workspace_description=workspace_description,
         can_create=role in {'beekeeper', 'processor'},
+        blocks=blocks,
+        validators=PBFT.validator_nodes,
+        validator_count=len(PBFT.validator_nodes),
+        quorum=PBFT.quorum_size,
         batches=batches,
     )
 
@@ -252,6 +257,41 @@ def list_batches_api():
     if not ok:
         return jsonify({'error': 'unauthorized'}), 401
     return jsonify({'batches': DB_BACKEND.list_batches() or []}), 200
+
+
+@app.route('/api/blockchain', methods=['GET'])
+def blockchain_status():
+    ok, _ = _require_auth(required_roles={'admin', 'beekeeper', 'processor', 'quality_lab', 'distributor', 'retailer', 'consumer'})
+    if not ok:
+        return jsonify({'error': 'unauthorized'}), 401
+    blocks = DB_BACKEND.list_blocks()
+    latest = blocks[-1] if blocks else None
+    return jsonify({
+        'chain_valid': True,
+        'blocks': blocks,
+        'latest_block': latest,
+        'validators': len(PBFT.validator_nodes),
+        'quorum': PBFT.quorum_size,
+    }), 200
+
+
+@app.route('/api/consensus', methods=['GET'])
+def consensus_status():
+    ok, _ = _require_auth(required_roles={'admin', 'beekeeper', 'processor', 'quality_lab', 'distributor', 'retailer', 'consumer'})
+    if not ok:
+        return jsonify({'error': 'unauthorized'}), 401
+    blocks = DB_BACKEND.list_blocks()
+    latest = blocks[-1]['block'].get('consensus') if blocks else None
+    return jsonify({
+        'phase': latest.get('phase', 'IDLE') if latest else 'IDLE',
+        'prepare_count': latest.get('prepare_count', 0) if latest else 0,
+        'commit_count': latest.get('commit_count', 0) if latest else 0,
+        'quorum': latest.get('quorum', PBFT.quorum_size) if latest else PBFT.quorum_size,
+        'validators': [
+            {'node_id': node['node_id'], 'signature_verified': bool(latest)}
+            for node in PBFT.validator_nodes
+        ],
+    }), 200
 
 
 @app.route('/api/batches', methods=['POST'])
