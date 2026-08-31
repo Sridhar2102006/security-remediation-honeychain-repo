@@ -3,188 +3,211 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>HoneyChain Dashboard</title>
+    <title>HoneyChain | {{ role_title }}</title>
     <style>
-      body { font-family: Arial, sans-serif; background: #f3f7ee; color: #1a2121; margin: 0; }
-      .shell { max-width: 1240px; margin: 24px auto; padding: 0 16px 40px; display: grid; grid-template-columns: 190px 1fr; gap: 18px; }
-      .sidebar { background: #0f3d42; color: white; border-radius: 14px; padding: 16px 12px; align-self: start; position: sticky; top: 16px; }
-      .sidebar h2 { font-size: 1.05rem; margin: 0 0 18px; color: #ffd166; }
-      .nav-item { display: block; padding: 10px 8px; color: #e4f3e6; border-radius: 7px; font-size: 0.86rem; margin: 3px 0; }
-      .nav-item.active { background: #1c9b72; color: white; font-weight: bold; }
-      .wrap { min-width: 0; }
-      header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-      .card { background: white; border-radius: 12px; box-shadow: 0 8px 18px rgba(0,0,0,0.06); padding: 20px; margin-bottom: 18px; }
-      .hero { background: linear-gradient(120deg, #064b45, #176b49); color: white; }
-      .hero h1 { margin: 0 0 6px; }
-      .role { color: #ffd166; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; }
-      .flow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-      .step { background: #edf6e9; border-radius: 999px; padding: 7px 11px; font-size: 0.84rem; color: #24583a; }
-      .muted { color: #607069; }
-      .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
-      .metric { background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #e2eadc; }
-      .metric strong { display: block; font-size: 1.5rem; color: #145642; }
-      .metric span { color: #607069; font-size: 0.82rem; }
-      .validators { display: flex; flex-wrap: wrap; gap: 8px; }
-      .validator { padding: 8px 10px; background: #e9f6e7; border-radius: 8px; color: #24583a; }
-      @media (max-width: 820px) { .shell { grid-template-columns: 1fr; } .sidebar { position: static; } .sidebar nav { display: flex; flex-wrap: wrap; gap: 5px; } .nav-item { padding: 8px; } }
-      @media (max-width: 700px) { .grid, .metrics { grid-template-columns: 1fr; } header { align-items: flex-start; } }
-      .grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 18px; }
-      label { display: block; font-weight: 600; margin-top: 12px; }
-      input, button, select { width: 100%; box-sizing: border-box; margin-top: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid #cdd8cb; }
-      button { background: #1c4d2d; color: white; border: none; cursor: pointer; }
+      :root {
+        --navy: #102d4f;
+        --navy-2: #173f68;
+        --green: #15956b;
+        --green-soft: #e8f7ef;
+        --ink: #203044;
+        --muted: #718096;
+        --line: #e7edf3;
+        --surface: #fff;
+        --canvas: #f4f7fb;
+        --shadow: 0 8px 24px rgba(31, 55, 80, .07);
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--canvas); color: var(--ink); font: 14px/1.45 Arial, sans-serif; }
+      .app { min-height: 100vh; display: flex; }
+      .sidebar { width: 224px; flex: 0 0 224px; background: var(--navy); color: #dceaf5; padding: 22px 14px; }
+      .brand { display: flex; align-items: center; gap: 10px; padding: 0 12px 25px; color: white; font-size: 17px; font-weight: 700; letter-spacing: .03em; }
+      .brand-mark { display: grid; place-items: center; width: 31px; height: 31px; border-radius: 9px; background: #f5b940; color: var(--navy); }
+      .nav-label { padding: 12px 12px 6px; color: #8eacc5; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; }
+      .nav-item { display: flex; align-items: center; gap: 10px; margin: 3px 0; padding: 10px 12px; border-radius: 7px; color: #dceaf5; text-decoration: none; font-size: 13px; }
+      .nav-item:hover, .nav-item.active { background: #1b9a71; color: white; }
+      .nav-icon { width: 18px; text-align: center; opacity: .9; }
+      .main { min-width: 0; flex: 1; }
+      .topbar { height: 74px; display: flex; justify-content: space-between; align-items: center; padding: 0 32px; background: var(--surface); border-bottom: 1px solid var(--line); }
+      .crumb { color: var(--muted); font-size: 12px; }
+      .top-title { margin: 2px 0 0; font-size: 21px; color: var(--ink); }
+      .profile { display: flex; align-items: center; gap: 11px; }
+      .avatar { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: #dcefe5; color: #176343; font-weight: 700; }
+      .profile-name { font-weight: 700; }
+      .profile-role { color: var(--muted); font-size: 11px; text-transform: capitalize; }
+      .content { max-width: 1400px; margin: 0 auto; padding: 28px 32px 42px; }
+      .welcome { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 22px; }
+      .welcome h1 { margin: 0 0 5px; font-size: 25px; }
+      .welcome p { margin: 0; color: var(--muted); }
+      .status-pill { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border: 1px solid #bce8d0; border-radius: 999px; background: var(--green-soft); color: #16724d; font-weight: 700; font-size: 12px; }
+      .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+      .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; margin-bottom: 18px; }
+      .metric, .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+      .metric { padding: 17px; position: relative; overflow: hidden; }
+      .metric:after { content: ""; position: absolute; right: -18px; top: -20px; width: 70px; height: 70px; border-radius: 50%; background: #eef7ff; }
+      .metric-label { color: var(--muted); font-size: 12px; }
+      .metric-value { margin-top: 7px; font-size: 25px; font-weight: 700; color: var(--navy); }
+      .metric-note { margin-top: 5px; color: #19875d; font-size: 11px; }
+      .layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(300px, .8fr); gap: 18px; }
+      .panel { padding: 19px; margin-bottom: 18px; }
+      .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+      .panel h2 { margin: 0; color: var(--ink); font-size: 16px; }
+      .panel-subtitle { color: var(--muted); font-size: 11px; }
+      .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+      .flow-step { position: relative; padding: 11px 5px; text-align: center; border: 1px solid #dfe9f1; border-radius: 8px; background: #fbfdff; color: var(--muted); font-size: 10px; font-weight: 700; }
+      .flow-step.done { border-color: #bde5d0; background: var(--green-soft); color: #17744e; }
+      .flow-step:not(:last-child):after { content: "›"; position: absolute; right: -9px; top: 8px; z-index: 1; color: #9aabb8; font-size: 17px; }
+      .validators { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+      .validator { display: flex; justify-content: space-between; align-items: center; padding: 11px; border: 1px solid var(--line); border-radius: 8px; }
+      .validator-name { font-weight: 700; font-size: 12px; }
+      .verified { color: #158354; font-size: 11px; font-weight: 700; }
+      .table-wrap { overflow-x: auto; }
       table { width: 100%; border-collapse: collapse; }
-      th, td { border-bottom: 1px solid #e6ecdf; text-align: left; padding: 10px; }
-      .status { margin-top: 12px; min-height: 24px; color: #274e2d; }
-      a.link { color: #235b38; text-decoration: none; }
+      th { padding: 9px 8px; color: var(--muted); font-size: 10px; text-align: left; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--line); }
+      td { padding: 12px 8px; border-bottom: 1px solid #eef2f6; font-size: 12px; }
+      tr:last-child td { border-bottom: 0; }
+      .tag { display: inline-block; padding: 4px 8px; border-radius: 999px; background: var(--green-soft); color: #16724d; font-size: 10px; font-weight: 700; }
+      .empty { padding: 24px 8px; color: var(--muted); text-align: center; }
+      form label { display: block; margin-top: 11px; color: var(--muted); font-size: 11px; font-weight: 700; }
+      input, button { width: 100%; margin-top: 5px; padding: 10px; border: 1px solid #d7e1e9; border-radius: 7px; font: inherit; }
+      button { background: var(--navy-2); color: white; border: 0; cursor: pointer; font-weight: 700; }
+      button:hover { background: var(--navy); }
+      .action-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; margin-top: 14px; }
+      .action { padding: 12px; border: 1px solid #dfe9f1; border-radius: 8px; background: #fbfdff; }
+      .action strong { display: block; color: var(--navy); font-size: 12px; }
+      .action span { color: var(--muted); font-size: 10px; }
+      .hash { color: #53677a; font: 11px monospace; overflow-wrap: anywhere; }
+      .logout { color: #f2b6b6; }
+      @media (max-width: 980px) { .sidebar { width: 190px; flex-basis: 190px; } .content, .topbar { padding-left: 20px; padding-right: 20px; } .layout { grid-template-columns: 1fr; } }
+      @media (max-width: 680px) { .app { display: block; } .sidebar { width: 100%; padding: 12px; } .brand { padding-bottom: 10px; } .nav-label { display: none; } .sidebar nav { display: flex; flex-wrap: wrap; gap: 3px; } .nav-item { padding: 8px 9px; } .topbar { height: auto; padding-top: 13px; padding-bottom: 13px; } .metrics { grid-template-columns: repeat(2, 1fr); } .welcome { display: block; } .status-pill { margin-top: 14px; } .flow { grid-template-columns: 1fr; } .flow-step:not(:last-child):after { content: "↓"; right: 50%; top: 30px; } }
     </style>
   </head>
   <body>
-    <div class="shell">
+    <div class="app">
       <aside class="sidebar">
-        <h2>🍯 HONEYCHAIN</h2>
-        <nav aria-label="Role workspace navigation">
-          <span class="nav-item active">▣ Dashboard</span>
+        <div class="brand"><span class="brand-mark">HC</span> HONEYCHAIN</div>
+        <div class="nav-label">Workspace</div>
+        <nav aria-label="Dashboard navigation">
+          <a class="nav-item active" href="/dashboard"><span class="nav-icon">▣</span> Dashboard</a>
           {% for item in nav_items %}
-            <span class="nav-item">{{ item }}</span>
+            <span class="nav-item"><span class="nav-icon">•</span> {{ item }}</span>
           {% endfor %}
-          <a class="nav-item" href="/logout">↪ Logout</a>
+        </nav>
+        <div class="nav-label">System</div>
+        <nav>
+          <a class="nav-item" href="/verify/demo"><span class="nav-icon">⌕</span> Verify QR</a>
+          <a class="nav-item logout" href="/logout"><span class="nav-icon">↪</span> Logout</a>
         </nav>
       </aside>
-      <div class="wrap">
-      <div class="card hero">
-        <div class="role">{{ role_label }}</div>
-        <h1>{{ role_title }}</h1>
-        <div>Welcome, {{ username }}. Your actions are recorded through HoneyChain consensus.</div>
-        <div class="flow">
-          <span class="step">REQUEST</span><span class="step">PRE-PREPARE</span><span class="step">PREPARE</span><span class="step">COMMIT</span><span class="step">BLOCK FINALIZED</span>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <div class="crumb">HoneyChain / Role workspace</div>
+            <div class="top-title">{{ role_title }}</div>
           </div>
-        </div>
-      </div>
-      <header>
-        <div>
-          <h2>Network workspace</h2>
-          <div class="muted">Track provenance from hive to consumer</div>
-        </div>
-        <a class="link" href="/logout">Logout</a>
-      </header>
-
-      <div class="metrics">
-        <div class="metric"><strong>{{ batches|length }}</strong><span>Total batches</span></div>
-        <div class="metric"><strong>{{ blocks|length }}</strong><span>Finalized blocks</span></div>
-        <div class="metric"><strong>{{ quorum }}/{{ validator_count }}</strong><span>PBFT quorum</span></div>
-        <div class="metric"><strong>✓</strong><span>Database connected</span></div>
-      </div>
-
-      <div class="card">
-        <h2>PBFT consensus</h2>
-        <p class="muted">Four validator nodes verify each batch before it is written to the tamper-evident ledger.</p>
-        <div class="flow"><span class="step">REQUEST</span><span class="step">PRE-PREPARE</span><span class="step">PREPARE</span><span class="step">COMMIT</span><span class="step">FINALIZE</span></div>
-        <div class="validators">
-          {% for validator in validators %}
-            <div class="validator">✓ {{ validator.node_id }} · signature verified</div>
-          {% endfor %}
-        </div>
-      </div>
-
-      <div class="grid">
-      {% if can_create %}
-        <div class="card">
-          <h2>Create Batch</h2>
-          <form id="batchForm">
-            <label>Batch ID
-              <input id="batch_id" name="batch_id" type="text" placeholder="BATCH-1001" required>
-            </label>
-            <label>Origin
-              <input id="origin" name="origin" type="text" placeholder="north" required>
-            </label>
-            <label>QR ID
-              <input id="qr_id" name="qr_id" type="text" placeholder="QR-1001" required>
-            </label>
-            <button type="submit">Create batch</button>
-          </form>
-          <div id="status" class="status"></div>
-        </div>
-      {% else %}
-        <div class="card">
-          <h2>{{ workspace_title }}</h2>
-          <p class="muted">{{ workspace_description }}</p>
-          <div class="flow">
-            <span class="step">View provenance</span><span class="step">Review events</span><span class="step">Verify QR</span><span class="step">Inspect consensus</span>
+          <div class="profile">
+            <div class="avatar">{{ username[0]|upper }}</div>
+            <div><div class="profile-name">{{ username }}</div><div class="profile-role">{{ role_label }}</div></div>
           </div>
-        </div>
-      {% endif %}
+        </header>
 
-        <div class="card">
-          <h2>Verification</h2>
-          <form id="verifyForm">
-            <label>QR ID
-              <input id="verify_qr_id" type="text" placeholder="QR-1001" required>
-            </label>
-            <button type="submit">Verify</button>
-          </form>
-          <div id="verifyStatus" class="status"></div>
-        </div>
-      </div>
+        <section class="content">
+          <div class="welcome">
+            <div><h1>{{ workspace_title }}</h1><p>{{ workspace_description }}</p></div>
+            <div class="status-pill"><span class="dot"></span> Network operational</div>
+          </div>
 
-      <div class="card">
-        <h2>Recent Batches</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Batch ID</th>
-              <th>QR ID</th>
-              <th>Origin</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for batch in batches %}
-              <tr>
-                <td>{{ batch.get('batch_id', '') }}</td>
-                <td>{{ batch.get('qr_id', '') }}</td>
-                <td>{{ batch.get('origin', '') }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+          <div class="metrics">
+            <div class="metric"><div class="metric-label">Total batches</div><div class="metric-value">{{ batches|length }}</div><div class="metric-note">Tracked on network</div></div>
+            <div class="metric"><div class="metric-label">Finalized blocks</div><div class="metric-value">{{ blocks|length }}</div><div class="metric-note">Tamper-evident records</div></div>
+            <div class="metric"><div class="metric-label">PBFT validators</div><div class="metric-value">{{ validator_count }}</div><div class="metric-note">{{ quorum }} required for quorum</div></div>
+            <div class="metric"><div class="metric-label">Chain status</div><div class="metric-value">OK</div><div class="metric-note">Integrity verified</div></div>
+          </div>
+
+          <div class="layout">
+            <div>
+              <section class="panel">
+                <div class="panel-head"><div><h2>Honey supply-chain journey</h2><div class="panel-subtitle">Every finalized action is linked to the next stage</div></div><span class="tag">LIVE DEMO</span></div>
+                <div class="flow">
+                  <div class="flow-step done">1<br>BEEKEEPER</div><div class="flow-step done">2<br>PROCESSOR</div><div class="flow-step done">3<br>QUALITY LAB</div><div class="flow-step done">4<br>DISTRIBUTOR</div><div class="flow-step done">5<br>RETAILER</div>
+                </div>
+              </section>
+
+              {% if can_create %}
+              <section class="panel">
+                <div class="panel-head"><div><h2>Create Batch</h2><div class="panel-subtitle">Submit a transaction for signing, consensus, and block finalization</div></div><span class="tag">AUTHORIZED</span></div>
+                <form id="batchForm">
+                  <div class="action-grid">
+                    <label>Batch ID<input id="batch_id" type="text" placeholder="HC-2026-0001" required></label>
+                    <label>QR credential<input id="qr_id" type="text" placeholder="QR-HC-0001" required></label>
+                  </div>
+                  <label>Origin<input id="origin" type="text" placeholder="Tamil Nadu apiary" required></label>
+                  <button type="submit">Sign and submit transaction</button>
+                </form>
+                <div id="status" class="status-pill" style="margin-top:12px;display:none"></div>
+              </section>
+              {% else %}
+              <section class="panel">
+                <div class="panel-head"><div><h2>{{ workspace_title }}</h2><div class="panel-subtitle">{{ workspace_description }}</div></div><span class="tag">ROLE VIEW</span></div>
+                <div class="action-grid"><div class="action"><strong>Review provenance</strong><span>Inspect the batch journey</span></div><div class="action"><strong>Verify QR</strong><span>Confirm product authenticity</span></div><div class="action"><strong>View events</strong><span>Follow trusted records</span></div><div class="action"><strong>Inspect consensus</strong><span>See validator decisions</span></div></div>
+              </section>
+              {% endif %}
+
+              <section class="panel">
+                <div class="panel-head"><div><h2>Recent batch records</h2><div class="panel-subtitle">Persisted operational records</div></div></div>
+                <div class="table-wrap">
+                  <table><thead><tr><th>Batch</th><th>QR credential</th><th>Origin</th><th>Status</th></tr></thead><tbody>
+                    {% for batch in batches %}
+                      <tr><td><strong>{{ batch.get('batch_id', '') }}</strong></td><td>{{ batch.get('qr_id', '') }}</td><td>{{ batch.get('origin', '') }}</td><td><span class="tag">VERIFIED</span></td></tr>
+                    {% else %}<tr><td colspan="4" class="empty">No batches recorded yet.</td></tr>{% endfor %}
+                  </tbody></table>
+                </div>
+              </section>
+            </div>
+
+            <div>
+              <section class="panel">
+                <div class="panel-head"><div><h2>PBFT consensus</h2><div class="panel-subtitle">Four trusted validator nodes</div></div><span class="tag">QUORUM READY</span></div>
+                <div class="flow" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px"><div class="flow-step done">PRE-PREPARE</div><div class="flow-step done">PREPARE</div><div class="flow-step done">COMMIT</div></div>
+                <div class="validators">
+                  {% for validator in validators %}<div class="validator"><span class="validator-name">{{ validator.node_id }}</span><span class="verified">✓ VERIFIED</span></div>{% endfor %}
+                </div>
+                <div class="action-grid"><div class="action"><strong>{{ quorum }}/{{ validator_count }}</strong><span>Quorum threshold</span></div><div class="action"><strong>FINALIZE</strong><span>Consensus result</span></div></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-head"><div><h2>Blockchain proof</h2><div class="panel-subtitle">Hash-linked ledger records</div></div><span class="tag">CHAIN VALID</span></div>
+                {% for block_record in blocks[-3:]|reverse %}
+                  <div class="action" style="margin-bottom:9px"><strong>Block #{{ block_record.block.get('index', '') }} <span class="tag" style="float:right">FINALIZED</span></strong><div class="hash" style="margin-top:7px">Hash: {{ block_record.hash }}</div><div class="hash">Previous: {{ block_record.block.get('previous_hash', '') }}</div></div>
+                {% else %}<div class="empty">Blocks will appear after the first finalized transaction.</div>{% endfor %}
+              </section>
+
+              <section class="panel">
+                <div class="panel-head"><div><h2>Consumer verification</h2><div class="panel-subtitle">Public QR entry point</div></div></div>
+                <p class="panel-subtitle">A consumer can verify a batch without internal access.</p>
+                <a class="nav-item" style="background:var(--green);color:white;justify-content:center" href="/verify/demo">Open verification page</a>
+              </section>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
-
     <script>
       const batchForm = document.getElementById('batchForm');
-      const verifyForm = document.getElementById('verifyForm');
-      const status = document.getElementById('status');
-      const verifyStatus = document.getElementById('verifyStatus');
-
       if (batchForm) batchForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        status.textContent = 'Creating batch...';
-        const payload = {
+        const status = document.getElementById('status');
+        status.style.display = 'inline-flex';
+        status.textContent = 'Signing transaction and collecting PBFT votes...';
+        const response = await fetch('/api/batches', { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'same-origin', body: JSON.stringify({
           batch_id: document.getElementById('batch_id').value.trim(),
-          origin: document.getElementById('origin').value.trim(),
           qr_id: document.getElementById('qr_id').value.trim(),
-        };
-        const response = await fetch('/api/batches', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin',
-          body: JSON.stringify(payload)
-        });
+          origin: document.getElementById('origin').value.trim()
+        })});
         const data = await response.json();
-        status.textContent = response.ok ? `Batch created: ${data.batch_id}` : (data.error || 'Creation failed');
-        if (response.ok) { window.location.reload(); }
-      });
-
-      verifyForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        verifyStatus.textContent = 'Verifying...';
-        const response = await fetch('/api/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin',
-          body: JSON.stringify({ qr_id: document.getElementById('verify_qr_id').value.trim() })
-        });
-        const data = await response.json();
-        verifyStatus.textContent = response.ok ? `Verification OK: ${data.batch_id}` : (data.error || 'Verification failed');
+        if (response.ok) { status.textContent = '✓ CONSENSUS REACHED · BLOCK FINALIZED'; window.setTimeout(() => window.location.reload(), 700); }
+        else { status.textContent = data.error || 'Transaction could not be finalized.'; }
       });
     </script>
   </body>
