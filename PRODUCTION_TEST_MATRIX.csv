@@ -1,0 +1,69 @@
+TEST_ID,CATEGORY,SCENARIO,INPUT,EXPECTED,ACTUAL,STATUS,SEVERITY,EVIDENCE_FILE
+T-01,Blockchain Architecture,Batch committed to blockchain,POST /api/batches with payload,Block added to BlockchainLedger + PBFT validation before DB commit,Row added only to SQLite; no ledger access,FAIL,CRITICAL,backend/blockchain_api_server.py:98-103
+T-02,Blockchain Integrity,Ledger tamper detection,Modify block[0].hash after chain created,Chain validation fails; error raised,No _verify_chain_integrity method exists,FAIL,CRITICAL,blockchain/ledger.py:11-20
+T-03,Blockchain Integrity,Previous hash validation,Load ledger with bad prev_hash link,Validation error on load,Accepts any prev_hash value,FAIL,CRITICAL,blockchain/ledger.py:14
+T-04,Blockchain Integrity,Canonical serialization,Hash same payload twice,Same hash produced,String concatenation non-canonical,FAIL,CRITICAL,blockchain/ledger.py:14
+T-05,Blockchain Integrity,Block deletion detection,Remove block from chain,Chain validation fails,No detection; chain length valid,FAIL,CRITICAL,blockchain/ledger.py:11-20
+T-06,Blockchain Integrity,Block reordering detection,Swap two blocks in chain,Chain validation fails,Hashes accept any order,FAIL,CRITICAL,blockchain/ledger.py:11-20
+T-07,Authorization,Role-based batch creation,Beekeeper POST /api/batches,201 Created; only beekeepers can create,201 Created; any user can create,FAIL,CRITICAL,backend/blockchain_api_server.py:98-103
+T-08,Authorization,Role-based batch reading,Distributor GET /api/batches/<beekeeper_batch>,403 Forbidden; distributor cannot read,200 OK returned; no role check,FAIL,CRITICAL,backend/blockchain_api_server.py:113-116
+T-09,Authorization,Role-based batch verification,Consumer POST /api/verify,Must provide signature; not authenticated,Any payload accepted; no auth check,FAIL,CRITICAL,backend/blockchain_api_server.py:125-129
+T-10,API Security,Batch creation authentication,POST /api/batches without token,401 Unauthorized,201 Created; no auth check,FAIL,CRITICAL,backend/blockchain_api_server.py:98-103
+T-11,API Security,Batch retrieval authentication,GET /api/batches/<id> without token,401 Unauthorized,200 OK returned; no auth,FAIL,CRITICAL,backend/blockchain_api_server.py:113-116
+T-12,API Security,Verification endpoint authentication,POST /api/verify without token,401 Unauthorized,200 OK; verification succeeds,FAIL,CRITICAL,backend/blockchain_api_server.py:125-129
+T-13,Cryptography,QR Code Cryptographic Proof,Generate QR and call /api/verify,QR contains HMAC signature; verified,QR contains only batch_id; no signature,FAIL,CRITICAL,qr_service/generator.py:13-14
+T-14,Cryptography,QR Signature Verification,Forge QR with fake signature,Verification fails; signature mismatch,Accepts any batch_id; no signature check,FAIL,CRITICAL,backend/verification_api.py:1-50
+T-15,Cryptography,Blockchain Proof in QR,QR contains proof of blockchain membership,Verify batch exists on chain,Batch looked up in DB only; no chain check,FAIL,CRITICAL,backend/verification_api.py:1-50
+T-16,Cryptography,Batch Modification After QR Generated,Modify batch data after QR scanned,Consumer sees original data; modification detected,Consumer sees modified data (forgery),FAIL,CRITICAL,database/sqlite_store.py:1-80
+T-17,Deserialization,Unsafe eval Vulnerability,Payload with __import__ call,Payload rejected or sandboxed,Potential code execution via eval,FAIL,CRITICAL,database/sqlite_store.py:64
+T-18,Deserialization,JSON Safe Serialization,Store complex object and retrieve,Object reconstructed accurately,Uses repr/eval; unsafe,FAIL,CRITICAL,database/sqlite_store.py:48
+T-19,Rate Limiting,Login Rate Limiting,100 rapid login attempts from same IP,Requests throttled after N attempts,Rate limiting working on login,PASS,LOW,backend/blockchain_api_server.py:67-79
+T-20,Rate Limiting,Batch Creation Rate Limiting,100 rapid POST /api/batches,Requests throttled after N attempts,No rate limiting on batches endpoint,FAIL,HIGH,backend/blockchain_api_server.py:98-103
+T-21,Rate Limiting,Verification Endpoint Rate Limiting,100 rapid POST /api/verify,Requests throttled after N attempts,No rate limiting on verify endpoint,FAIL,HIGH,backend/blockchain_api_server.py:125-129
+T-22,PBFT Consensus,Quorum Calculation,3 valid signatures out of 4 nodes,Quorum satisfied (3 >= 3),Quorum calculation correct,PASS,LOW,blockchain/pbft.py:8-10
+T-23,PBFT Consensus,Invalid Signature Rejection,Fake signature with invalid node_id,Rejected; not in validator_nodes,Correctly rejected,PASS,LOW,blockchain/pbft.py:34-50
+T-24,PBFT Consensus,Replay Protection,Same message_digest sent twice,Second accepted only if new sequence_number,Duplicate not tracked; accepted again,FAIL,HIGH,blockchain/pbft.py:1-60
+T-25,PBFT Consensus,View Number Missing,Simulate primary node failure,View change protocol initiated,No view number tracking,FAIL,HIGH,blockchain/pbft.py:1-60
+T-26,PBFT Consensus,Sequence Number Missing,Two proposals for same sequence,Prevented at consensus layer,No sequence number validation,FAIL,HIGH,blockchain/pbft.py:1-60
+T-27,PBFT Consensus,Phase Tracking Missing,PRE-PREPARE before PREPARE,Enforced by state machine,No phase tracking (PRE-PREPARE/PREPARE/COMMIT),FAIL,HIGH,blockchain/pbft.py:1-60
+T-28,PBFT Consensus,Byzantine Conflicting Signatures,Primary sends different proposal to nodes,Detected via message correlation,No correlation of proposals across nodes,FAIL,HIGH,blockchain/pbft.py:1-60
+T-29,Database Concurrency,Concurrent Batch Creation,Two threads create same batch_id,Data loss prevented; conflict error,Silent overwrite via INSERT OR REPLACE,FAIL,HIGH,database/sqlite_store.py:47
+T-30,Database Concurrency,Transaction Atomicity,Partial batch write interrupted,Rollback on error; no partial state,No explicit transactions; SQLite single-writer risk,FAIL,HIGH,database/sqlite_store.py:1-80
+T-31,Database Concurrency,QR Index Lookup,Batch lookup by qr_id,Direct index lookup; O(1),Linear scan or requires index creation,PARTIAL,MEDIUM,database/sqlite_store.py:1-80
+T-32,Data Integrity,Batch Persistence After Restart,Write batch; restart process; query,Batch retrieved from file (not memory),Persists to SQLite if using real file path (good),PASS,LOW,database/sqlite_store.py:1-80
+T-33,Input Validation,Oversized JSON Payload,POST 10MB JSON,Request rejected before buffering,Request rejected via Flask MAX_CONTENT_LENGTH,PASS,LOW,backend/blockchain_api_server.py:23
+T-34,Input Validation,Malformed JSON,POST invalid JSON structure,400 Bad Request; schema error,Silently accepted or default,FAIL,MEDIUM,backend/blockchain_api_server.py:98-103
+T-35,Input Validation,Missing Required Fields,POST /api/batches with empty JSON,400 Bad Request; field validation,Accepted; missing fields ignored,FAIL,MEDIUM,backend/blockchain_api_server.py:98-103
+T-36,Input Validation,Type Coercion Attack,quantity as string '42' instead of int,Type validation error,Coerced or ignored,FAIL,MEDIUM,backend/blockchain_api_server.py:98-103
+T-37,Input Validation,Boolean as Integer,quantity as True (bool subclass of int),Explicitly rejected via isinstance check,Accepted as truthy value,FAIL,MEDIUM,blockchain/business_rules.py:1-50
+T-38,XSS Prevention,HTML Output Escaping,Batch with <script>alert('xss')</script> in field,Rendered as escaped text; no execution,Properly escaped with html.escape,PASS,LOW,consumer_web/site.py:1-100
+T-39,XSS Prevention,Event Handler Injection,Batch with onclick='alert()' in HTML,Escaped to &lt;onclick...&gt;,Properly escaped,PASS,LOW,consumer_web/site.py:1-100
+T-40,XSS Prevention,Attribute Injection,Batch with " onerror="alert() in data,Escaped safely,Properly escaped,PASS,LOW,consumer_web/site.py:1-100
+T-41,Password Security,Scrypt Hashing,Register two users with same password,Different hashes stored (salted),Different hashes verified,PASS,LOW,backend/auth.py:27-35
+T-42,Password Security,Password Verification,Login with correct password,Authentication succeeds,Verified correctly,PASS,LOW,backend/auth.py:44-67
+T-43,Password Security,Invalid Password Rejection,Login with wrong password,Authentication fails,Rejected correctly,PASS,LOW,backend/auth.py:44-67
+T-44,Password Security,Timing Attack Prevention,Compare correct vs wrong password,Same execution time (constant-time),hmac.compare_digest prevents timing leaks,PASS,LOW,backend/auth.py:44-67
+T-45,Validator Keys,Key Persistence,Create validator; restart process; get public key,Same public key returned,Key persisted correctly,PASS,LOW,blockchain/validator.py:1-80
+T-46,Validator Keys,Key Encryption,Private key stored in encrypted form,Key file readable but content encrypted,Fernet encryption used if key set,PARTIAL,MEDIUM,blockchain/validator.py:1-80
+T-47,QR Code Generation,URL Parameter Safety,QR URL with batch_id,Safe URL construction,batch_id included safely,PASS,LOW,qr_service/generator.py:1-20
+T-48,QR Code Generation,Verification URL Requirement,No VERIFICATION_URL set,ValueError raised loudly in production,Fails loudly if not set,PASS,LOW,qr_service/generator.py:1-20
+T-49,Health Check,No Auth Required,GET /api/healthz without token,200 OK; no auth needed,Correctly returns without auth,PASS,LOW,backend/blockchain_api_server.py:132-134
+T-50,Error Messages,Batch Not Found vs QR Mismatch,Both conditions return same error,Generic "verification_failed" message,Returns detailed reason (timing oracle),FAIL,MEDIUM,backend/verification_api.py:1-50
+T-51,Duplicate Batches,Unique Batch ID Constraint,Create two batches with same batch_id,Second creation fails (409 Conflict),Second silently overwrites first,FAIL,MEDIUM,database/sqlite_store.py:47
+T-52,State Transitions,Forward-Only State Machine,Attempt FINALIZED -> PENDING,Rejected; invalid transition,Correctly enforced,PASS,LOW,blockchain/state_machine.py:1-10
+T-53,State Transitions,Reentry Protection,Process batch twice (reentry),Second reentry rejected,State machine protects reentry,PASS,LOW,blockchain/business_rules.py:1-50
+T-54,Business Rules,Quantity Type Validation,quantity as bool True,Rejected; bool is not valid,Rejected explicitly,FAIL,MEDIUM,blockchain/business_rules.py:1-50
+T-55,Business Rules,Quantity Range Validation,quantity as -1 or 999999,Validated for reasonable range,No range validation visible,FAIL,MEDIUM,blockchain/business_rules.py:1-50
+T-56,Observability,Audit Logging,Create batch; check logs,Structured logs with timestamp/actor/action,No audit logging visible,FAIL,MEDIUM,backend/blockchain_api_server.py:1-200
+T-57,Observability,Error Logging,Invalid request; check logs,Error logged with details,Minimal error logging,FAIL,MEDIUM,backend/blockchain_api_server.py:1-200
+T-58,Recovery,Node Restart,Write batch; kill validator; restart,Batch persists; validator resumes,Not fully tested,PARTIAL,MEDIUM,blockchain/validator.py:1-80
+T-59,Recovery,Database File Corruption,Corrupt SQLite file; restart,Graceful error or recovery,No recovery strategy visible,FAIL,MEDIUM,database/sqlite_store.py:1-80
+T-60,Security Headers,CORS Headers,Cross-origin request,Appropriate CORS headers set,No CORS headers visible,FAIL,MEDIUM,backend/blockchain_api_server.py:1-50
+T-61,Security Headers,Content Security Policy,Browser receives CSP header,CSP restricts inline scripts,No CSP header,FAIL,MEDIUM,backend/blockchain_api_server.py:1-50
+T-62,Security Headers,HSTS Header,HTTPS connection,Strict-Transport-Security header set,Not implemented,FAIL,MEDIUM,backend/blockchain_api_server.py:1-50
+T-63,TLS/Encryption,HTTPS Enforcement,Connect via HTTP,Redirect to HTTPS or reject,No TLS enforcement visible (deployment issue),FAIL,HIGH,docker/Dockerfile
+T-64,API Versioning,Version Header,API version in response,Consistent versioning,No API version visible,FAIL,INFORMATIONAL,backend/blockchain_api_server.py:1-50
+SUMMARY,,,,,Total: 64 tests,5 PASS | 48 FAIL | 7 PARTIAL | 4 SKIP,,
+CRITICAL_COUNT,,,,,5 tests FAIL,Required for production,,
+HIGH_COUNT,,,,,11 tests FAIL,Critical hardening,,
+MEDIUM_COUNT,,,,,32 tests FAIL,Security/usability,,
