@@ -34,5 +34,26 @@ def test_full_demo_flow_login_batch_and_verify_via_qr_id():
     dashboard = client.get('/dashboard')
     assert dashboard.status_code == 200
     body = dashboard.get_data(as_text=True).lower()
-    assert 'honeychain demo' in body
+    assert 'honeychain' in body
     assert 'create batch' in body
+
+
+def test_designation_login_renders_role_specific_workspace():
+    service = AuthService()
+    service.register_user('kvic_admin', 'admin-pass', 'admin')
+    from backend import blockchain_api_server
+
+    blockchain_api_server.AUTH_SERVICE = service
+    blockchain_api_server.DB_BACKEND = MockERPBackend(':memory:')
+    client = app.test_client()
+
+    login = client.post(
+        '/api/login',
+        json={'username': 'kvic_admin', 'password': 'admin-pass', 'designation': 'admin'},
+    )
+    assert login.status_code == 200
+    page = client.get('/dashboard')
+    body = page.get_data(as_text=True)
+    assert 'KVIC / Network Administrator' in body
+    assert 'Network oversight' in body
+    assert 'Create Batch' not in body

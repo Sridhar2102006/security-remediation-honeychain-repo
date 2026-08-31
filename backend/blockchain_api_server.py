@@ -75,6 +75,7 @@ def add_cors_headers(response):
 
 def seed_default_users(service: AuthService):
     for username, role in {
+        'kvic_admin': 'admin',
         'beekeeper': 'beekeeper',
         'processor': 'processor',
         'quality_lab': 'quality_lab',
@@ -199,7 +200,30 @@ def dashboard_page():
     if not username:
         return redirect('/login')
     batches = DB_BACKEND.list_batches() or []
-    return render_template('dashboard.html', username=username, batches=batches)
+    role = session.get('role', 'consumer')
+    role_details = {
+        'admin': ('KVIC / Network Administrator', 'Network oversight', 'Monitor validators, review provenance, and inspect the complete ledger.'),
+        'beekeeper': ('Beekeeper workspace', 'Harvest registration', 'Create the origin record for each honey batch and start its trusted journey.'),
+        'processor': ('Processor workspace', 'Processing operations', 'Receive registered batches, record processing, and continue provenance.'),
+        'quality_lab': ('Quality Lab workspace', 'Quality certification', 'Review processing records and publish quality verification decisions.'),
+        'distributor': ('Distributor workspace', 'Distribution logistics', 'Track certified batches as they move through distribution.'),
+        'retailer': ('Retailer workspace', 'Retail operations', 'Confirm provenance before placing a certified product on the shelf.'),
+        'consumer': ('Consumer verification', 'Product authenticity', 'Verify a QR credential and see the trusted journey from hive to home.'),
+    }
+    role_title, workspace_title, workspace_description = role_details.get(
+        role, ('HoneyChain workspace', 'Traceability workspace', 'Review trusted supply-chain records.')
+    )
+    return render_template(
+        'dashboard.html',
+        username=username,
+        role=role,
+        role_label=role.replace('_', ' '),
+        role_title=role_title,
+        workspace_title=workspace_title,
+        workspace_description=workspace_description,
+        can_create=role in {'beekeeper', 'processor'},
+        batches=batches,
+    )
 
 
 @app.route('/logout')
@@ -213,8 +237,9 @@ def login():
     payload = request.get_json(silent=True) or {}
     username = str(payload.get('username', '')).strip()
     password = str(payload.get('password', ''))
+    designation = str(payload.get('designation', '')).strip()
     user = AUTH_SERVICE.authenticate(username, password)
-    if user is None:
+    if user is None or (designation and user.get('role') != designation):
         return jsonify({'success': False, 'error': 'invalid_credentials'}), 401
     session['user'] = username
     session['role'] = user['role']
@@ -223,7 +248,7 @@ def login():
 
 @app.route('/api/batches', methods=['GET'])
 def list_batches_api():
-    ok, _ = _require_auth(required_roles={'beekeeper', 'processor', 'quality_lab', 'distributor', 'retailer', 'consumer'})
+    ok, _ = _require_auth(required_roles={'admin', 'beekeeper', 'processor', 'quality_lab', 'distributor', 'retailer', 'consumer'})
     if not ok:
         return jsonify({'error': 'unauthorized'}), 401
     return jsonify({'batches': DB_BACKEND.list_batches() or []}), 200
@@ -276,7 +301,7 @@ def create_batch():
 
 @app.route('/api/batches/<batch_id>', methods=['GET'])
 def get_batch(batch_id):
-    ok, user_record = _require_auth(required_roles={'beekeeper', 'processor', 'quality_lab', 'distributor', 'retailer', 'consumer'})
+    ok, user_record = _require_auth(required_roles={'admin', 'beekeeper', 'processor', 'quality_lab', 'distributor', 'retailer', 'consumer'})
     if not ok:
         return jsonify({'error': 'unauthorized'}), 401
     batch = DB_BACKEND.get_batch(batch_id=batch_id)
