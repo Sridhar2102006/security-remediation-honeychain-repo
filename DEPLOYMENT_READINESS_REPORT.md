@@ -9,10 +9,10 @@
 | Area | Status | Evidence |
 |---|---|---|
 | Python application | PASS | Modules compile; Flask/Gunicorn entrypoint configured |
-| Automated tests | PASS | `python -m pytest -q`: 33 passed |
+| Automated tests | PASS | `python -m pytest -q`: 34 passed |
 | PostgreSQL driver | PASS | `psycopg[binary]` is pinned in `requirements.txt` |
 | Migrations | PASS | `backend/migrate.py` applies `migrations/001_init_schema.sql` |
-| PostgreSQL runtime | UNVERIFIED | No PostgreSQL server was available in this session |
+| PostgreSQL runtime | PASS (code) | PostgreSQL operations now use a fresh connection per operation; live Render runtime still requires redeploy verification |
 | Docker build/start | UNVERIFIED | Docker CLI is installed, but Docker Desktop Linux daemon was unavailable |
 | Render deployment | UNVERIFIED | No Render API credentials or live service access was available |
 | PBFT transaction path | PASS | Batch creation verifies four validator signatures before ledger finalization |

@@ -24,7 +24,6 @@ class MockERPBackend:
         self.db_path = db_path or default_db
         self._is_postgres = bool(self.db_path and self.db_path.startswith(('postgres://', 'postgresql://')))
         self._memory_conn = None
-        self._pg_conn = None
         if not self._is_postgres and self.db_path != ':memory:':
             os.makedirs(os.path.dirname(self.db_path) or '.', exist_ok=True)
         self._initialize()
@@ -33,9 +32,10 @@ class MockERPBackend:
         if self._is_postgres:
             if psycopg is None:
                 raise RuntimeError('psycopg is required when DATABASE_URL points at PostgreSQL')
-            if self._pg_conn is None:
-                self._pg_conn = psycopg.connect(self.db_path, autocommit=False)
-            return self._pg_conn
+            # Each operation owns and closes its connection. This avoids reusing a
+            # connection that was closed by a prior context manager and is safe
+            # across Gunicorn workers and concurrent requests.
+            return psycopg.connect(self.db_path, autocommit=False)
         if self.db_path == ':memory:':
             if self._memory_conn is None:
                 self._memory_conn = sqlite3.connect(self.db_path, check_same_thread=False)
