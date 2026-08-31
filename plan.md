@@ -13,6 +13,11 @@
 5. Test `/healthz`, `/readiness`, login, batch creation, PBFT/block finalization, QR verification, and restart persistence.
 6. Create the Vercel frontend and set `FRONTEND_URL` in Render to its real origin.
 
+## UI status
+- Role-aware login and dashboard navigation are implemented for all seven designations.
+- Dashboard cards expose real batch, block, quorum, validator, and database status.
+- Public consumer QR verification remains available at `/verify/<qr_id>`.
+
 ## Recommended configuration
 - Frontend env: VITE_API_BASE_URL
 - Backend env: DATABASE_URL, JWT_SECRET, FRONTEND_URL, ENVIRONMENT, PORT

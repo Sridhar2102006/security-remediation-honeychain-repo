@@ -213,6 +213,16 @@ def dashboard_page():
     role_title, workspace_title, workspace_description = role_details.get(
         role, ('HoneyChain workspace', 'Traceability workspace', 'Review trusted supply-chain records.')
     )
+    role_config = {
+        'admin': ('Network health', 'Validators', 'Audit logs', 'System overview'),
+        'beekeeper': ('My apiaries', 'Harvest records', 'Batch creation', 'Pickup requests'),
+        'processor': ('Incoming batches', 'In processing', 'Quality submissions', 'Inventory'),
+        'quality_lab': ('Test requests', 'Under testing', 'Certificates', 'Failed batches'),
+        'distributor': ('Inventory', 'Approved batches', 'Shipments', 'Delivery tracking'),
+        'retailer': ('Products received', 'Inventory', 'Sales', 'QR verification'),
+        'consumer': ('Scan QR', 'Verify product', 'Provenance', 'Product history'),
+    }
+    nav_items = role_config.get(role, role_config['consumer'])
     blocks = DB_BACKEND.list_blocks()
     return render_template(
         'dashboard.html',
@@ -227,6 +237,7 @@ def dashboard_page():
         validators=PBFT.validator_nodes,
         validator_count=len(PBFT.validator_nodes),
         quorum=PBFT.quorum_size,
+        nav_items=nav_items,
         batches=batches,
     )
 

@@ -65,3 +65,4 @@ def test_designation_login_renders_role_specific_workspace():
     assert 'KVIC / Network Administrator' in body
     assert 'Network oversight' in body
     assert 'Create Batch' not in body
+    assert 'Network health' in body
