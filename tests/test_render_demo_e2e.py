@@ -36,6 +36,8 @@ def test_full_demo_flow_login_batch_and_verify_via_qr_id():
     body = dashboard.get_data(as_text=True).lower()
     assert 'honeychain' in body
     assert 'create batch' in body
+    assert 'verification failed' in body
+    assert 'tampering detected' in body
 
     consensus = client.get('/api/consensus')
     assert consensus.status_code == 200
